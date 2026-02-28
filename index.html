@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Energy Clicker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+/* ================================================================
+   ENERGY CLICKER — Full Stylesheet
+   ================================================================ */
+:root {
+  --bg:         #03050f;
+  --surface:    #0a1020;
+  --surface2:   #0e1628;
+  --border:     rgba(80,140,255,0.12);
+  --border2:    rgba(80,140,255,0.22);
+  --neon:       #3de8ff;
+  --neon2:      #ff5af0;
+  --neon3:      #ffd84a;
+  --neon4:      #4affb0;
+  --text:       #b8cce0;
+  --text-dim:   #3d5570;
+  --text-bright:#e8f4ff;
+  --purple:     #9b6aff;
+  --red:        #ff4a6a;
+  --radius:     10px;
+  --font-hud:   'Orbitron', monospace;
+  --font-body:  'Rajdhani', sans-serif;
+  --glow-c: 0 0 6px var(--neon),  0 0 20px rgba(61,232,255,.25);
+  --glow-m: 0 0 6px var(--neon2), 0 0 20px rgba(255,90,240,.25);
+  --glow-y: 0 0 6px var(--neon3), 0 0 20px rgba(255,216,74,.25);
+  --glow-g: 0 0 6px var(--neon4), 0 0 20px rgba(74,255,176,.25);
+  --glow-r: 0 0 6px var(--red),   0 0 20px rgba(255,74,106,.25);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);overflow-x:hidden;line-height:1.4}
+
+/* ── shared canvas + nebula ── */
+#starfield{position:fixed;inset:0;z-index:0;pointer-events:none}
+#nebula{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 60% 40% at 20% 30%,rgba(61,100,255,.07) 0%,transparent 70%),
+    radial-gradient(ellipse 50% 35% at 80% 70%,rgba(180,60,255,.06) 0%,transparent 65%),
+    radial-gradient(ellipse 40% 50% at 55% 10%,rgba(60,200,255,.05) 0%,transparent 60%);
+}
+
+/* ================================================================
+   MENU SCREEN
+   ================================================================ */
+#menu-screen{
+  position:fixed;inset:0;z-index:200;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:0;
+  background:linear-gradient(180deg,rgba(3,5,15,.96) 0%,rgba(6,8,25,.98) 100%);
+  transition:opacity .5s ease, visibility .5s ease;
+}
+#menu-screen.hidden{opacity:0;visibility:hidden;pointer-events:none}
+
+/* Decorative energy ring on the menu */
+.menu-ring-wrap{
+  position:relative;
+  width:200px;height:200px;
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:2.5rem;
+  flex-shrink:0;
+}
+.menu-ring{
+  position:absolute;border-radius:50%;
+  border-style:solid;border-color:transparent;
+}
+.menu-ring-a{
+  inset:0;border-width:2px;
+  border-top-color:var(--neon);border-right-color:rgba(61,232,255,.2);
+  animation:spin-cw 6s linear infinite;
+  filter:drop-shadow(0 0 5px var(--neon));
+}
+.menu-ring-b{
+  inset:16px;border-width:2px;
+  border-bottom-color:var(--neon2);border-left-color:rgba(255,90,240,.2);
+  animation:spin-cw 3.5s linear infinite reverse;
+  filter:drop-shadow(0 0 5px var(--neon2));
+}
+.menu-ring-c{
+  inset:32px;border-width:1px;
+  border-top-color:var(--neon3);border-right-color:rgba(255,216,74,.15);
+  animation:spin-cw 9s linear infinite;
+  filter:drop-shadow(0 0 4px var(--neon3));
+}
+.menu-sphere{
+  position:absolute;inset:44px;border-radius:50%;
+  background:radial-gradient(circle at 38% 35%,rgba(120,200,255,.35) 0%,rgba(61,150,255,.12) 40%,transparent 100%);
+  box-shadow:inset 0 0 28px rgba(61,232,255,.15),0 0 50px rgba(61,232,255,.12);
+  animation:sphere-breathe 3.5s ease-in-out infinite;
+}
+.menu-icon{position:relative;z-index:2;font-size:3rem;
+  filter:drop-shadow(0 0 14px var(--neon)) drop-shadow(0 0 28px var(--neon))}
+
+/* Title */
+.menu-title{
+  font-family:var(--font-hud);
+  font-size:clamp(2rem,6vw,3.8rem);
+  font-weight:900;letter-spacing:.18em;
+  color:#fff;text-shadow:var(--glow-c);
+  text-align:center;margin-bottom:.5rem;
+  animation:title-pulse 3s ease-in-out infinite;
+}
+@keyframes title-pulse{0%,100%{text-shadow:var(--glow-c)}50%{text-shadow:0 0 12px var(--neon),0 0 40px rgba(61,232,255,.5),0 0 80px rgba(61,232,255,.2)}}
+
+.menu-sub{
+  font-family:var(--font-hud);font-size:.65rem;
+  letter-spacing:.35em;color:var(--text-dim);
+  margin-bottom:3rem;text-align:center;
+}
+
+/* Save slot preview shown when a save exists */
+#save-preview{
+  font-family:var(--font-hud);font-size:.6rem;
+  letter-spacing:.12em;color:var(--text-dim);
+  background:rgba(61,232,255,.04);
+  border:1px solid rgba(61,232,255,.12);
+  border-radius:var(--radius);
+  padding:.6rem 1.4rem;
+  margin-bottom:2rem;
+  text-align:center;
+  min-width:280px;
+}
+#save-preview span{color:var(--neon4)}
+#save-preview.no-save{color:var(--text-dim);opacity:.5}
+
+/* Menu buttons */
+.menu-buttons{
+  display:flex;flex-direction:column;align-items:center;gap:.9rem;
+  width:100%;max-width:280px;
+}
+.menu-btn{
+  width:100%;
+  font-family:var(--font-hud);font-size:.72rem;
+  letter-spacing:.2em;font-weight:700;
+  padding:.9rem 0;
+  border-radius:var(--radius);
+  border:1px solid;
+  background:transparent;
+  cursor:pointer;
+  transition:all .22s ease;
+  position:relative;overflow:hidden;
+}
+/* Shimmer sweep on hover */
+.menu-btn::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.06) 50%,transparent 100%);
+  transform:translateX(-100%);transition:transform .4s ease;
+}
+.menu-btn:hover::after{transform:translateX(100%)}
+
+.menu-btn.start{
+  color:var(--neon);border-color:rgba(61,232,255,.4);
+  box-shadow:0 0 0 rgba(61,232,255,0);
+}
+.menu-btn.start:hover{
+  background:rgba(61,232,255,.08);
+  box-shadow:var(--glow-c),inset 0 0 20px rgba(61,232,255,.05);
+  transform:translateY(-2px);
+}
+.menu-btn.load{
+  color:var(--neon4);border-color:rgba(74,255,176,.35);
+}
+.menu-btn.load:hover{
+  background:rgba(74,255,176,.07);
+  box-shadow:var(--glow-g);transform:translateY(-2px);
+}
+.menu-btn.load:disabled{
+  color:var(--text-dim);border-color:rgba(255,255,255,.06);
+  cursor:not-allowed;opacity:.4;
+}
+.menu-btn.load:disabled::after{display:none}
+.menu-btn.exit-btn{
+  color:var(--red);border-color:rgba(255,74,106,.3);
+}
+.menu-btn.exit-btn:hover{
+  background:rgba(255,74,106,.07);
+  box-shadow:var(--glow-r);transform:translateY(-2px);
+}
+
+/* ── Confirm exit dialog ── */
+#exit-dialog{
+  position:fixed;inset:0;z-index:300;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(3,5,15,.85);
+  backdrop-filter:blur(8px);
+  opacity:0;visibility:hidden;pointer-events:none;
+  transition:opacity .25s,visibility .25s;
+}
+#exit-dialog.show{opacity:1;visibility:visible;pointer-events:auto}
+
+.dialog-box{
+  background:var(--surface2);
+  border:1px solid var(--border2);
+  border-radius:16px;
+  padding:2.5rem 2.5rem;
+  max-width:380px;width:90%;
+  text-align:center;
+  box-shadow:0 0 60px rgba(61,232,255,.08);
+}
+.dialog-title{
+  font-family:var(--font-hud);font-size:.8rem;
+  letter-spacing:.2em;color:var(--neon);
+  margin-bottom:.8rem;
+}
+.dialog-body{font-size:.95rem;color:var(--text);margin-bottom:2rem;line-height:1.6}
+.dialog-btns{display:flex;gap:1rem;justify-content:center}
+.dialog-btn{
+  font-family:var(--font-hud);font-size:.65rem;letter-spacing:.15em;
+  padding:.7rem 1.6rem;border-radius:var(--radius);
+  border:1px solid;background:transparent;cursor:pointer;
+  transition:all .2s;
+}
+.dialog-btn.confirm{color:var(--red);border-color:rgba(255,74,106,.4)}
+.dialog-btn.confirm:hover{background:rgba(255,74,106,.1);box-shadow:var(--glow-r)}
+.dialog-btn.cancel{color:var(--text);border-color:var(--border2)}
+.dialog-btn.cancel:hover{background:rgba(255,255,255,.04)}
+
+/* ================================================================
+   GAME UI
+   ================================================================ */
+#game-ui{
+  position:relative;z-index:1;
+  min-height:100vh;display:flex;flex-direction:column;
+  opacity:0;visibility:hidden;pointer-events:none;
+  transition:opacity .5s ease, visibility .5s ease;
+}
+#game-ui.visible{opacity:1;visibility:visible;pointer-events:auto}
+
+/* ── Header ── */
+#header{
+  position:sticky;top:0;z-index:50;
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
+  padding:.8rem 1.4rem;gap:.7rem;
+  background:linear-gradient(180deg,rgba(3,5,15,.97) 0%,rgba(3,5,15,.82) 100%);
+  border-bottom:1px solid var(--border2);
+  backdrop-filter:blur(16px);
+}
+#title-block{display:flex;align-items:center;gap:.6rem;flex-shrink:0}
+#title-block h1{
+  font-family:var(--font-hud);font-size:clamp(.8rem,1.8vw,1.2rem);
+  font-weight:900;letter-spacing:.2em;color:#fff;text-shadow:var(--glow-c);
+}
+.title-star{font-size:.9rem;color:var(--neon);animation:twinkle-s 1.8s ease-in-out infinite}
+.title-star:nth-child(3){animation-delay:.9s}
+@keyframes twinkle-s{0%,100%{opacity:.4;transform:scale(1)}50%{opacity:1;transform:scale(1.4)}}
+
+#score-area{display:flex;align-items:center;gap:1.6rem;flex:1;justify-content:center}
+.stat-block{text-align:center}
+.stat-value{
+  font-family:var(--font-hud);font-size:clamp(1rem,2.5vw,1.8rem);font-weight:700;
+  color:var(--neon3);text-shadow:var(--glow-y);display:block;transition:transform .08s ease;
+}
+.stat-value.bump{transform:scale(1.1)}
+.stat-label{font-family:var(--font-hud);font-size:.5rem;letter-spacing:.16em;color:var(--text-dim);display:block;margin-top:.1rem}
+.stat-divider{width:1px;height:2.2rem;background:var(--border2)}
+#stat-cps .stat-value{color:var(--neon4);text-shadow:var(--glow-g)}
+#stat-cpc .stat-value{color:var(--neon);text-shadow:var(--glow-c)}
+#stat-total .stat-value{color:var(--purple);text-shadow:0 0 6px var(--purple)}
+
+/* Header action buttons group */
+#header-actions{display:flex;gap:.5rem;align-items:center;flex-shrink:0;flex-wrap:wrap}
+.hdr-btn{
+  font-family:var(--font-hud);font-size:.52rem;letter-spacing:.1em;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:100px;padding:.38rem .85rem;cursor:pointer;
+  transition:all .2s;white-space:nowrap;
+  color:var(--text-dim);
+}
+.hdr-btn:hover{border-color:var(--neon);color:var(--neon);box-shadow:var(--glow-c)}
+.hdr-btn.music.on{border-color:var(--neon4);color:var(--neon4);box-shadow:var(--glow-g)}
+
+/* Save button special style */
+.hdr-btn.save{color:var(--neon3);border-color:rgba(255,216,74,.3)}
+.hdr-btn.save:hover{border-color:var(--neon3);box-shadow:var(--glow-y)}
+.hdr-btn.save.saving{
+  color:var(--neon4);border-color:rgba(74,255,176,.4);
+  box-shadow:var(--glow-g);
+  animation:save-flash .6s ease;
+}
+@keyframes save-flash{0%,100%{opacity:1}50%{opacity:.6}}
+
+/* Menu return button */
+.hdr-btn.menu-return{color:var(--text-dim);border-color:rgba(255,255,255,.1)}
+.hdr-btn.menu-return:hover{border-color:var(--red);color:var(--red);box-shadow:var(--glow-r)}
+
+/* ================================================================
+   LAYOUT — 3 columns
+   ================================================================ */
+#main-layout{display:grid;grid-template-columns:280px 1fr 280px;gap:0;flex:1}
+
+section.panel{
+  overflow-y:auto;max-height:calc(100vh - 70px);padding:1.2rem 1rem;
+  scrollbar-width:thin;scrollbar-color:rgba(61,232,255,.15) transparent;
+}
+section.panel::-webkit-scrollbar{width:3px}
+section.panel::-webkit-scrollbar-thumb{background:rgba(61,232,255,.15);border-radius:3px}
+#shop-panel{border-left:1px solid var(--border);border-right:1px solid var(--border);background:rgba(8,12,24,.6)}
+
+.panel-title{
+  font-family:var(--font-hud);font-size:.6rem;letter-spacing:.28em;color:var(--neon);
+  margin-bottom:.2rem;padding-bottom:.5rem;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:.5rem;
+}
+.panel-title::before{content:'';display:block;width:3px;height:.9rem;background:var(--neon);box-shadow:var(--glow-c);border-radius:2px}
+.panel-sub{font-size:.78rem;color:var(--text-dim);margin-bottom:.8rem;margin-top:.3rem}
+
+.shop-divider{
+  font-family:var(--font-hud);font-size:.58rem;letter-spacing:.2em;color:var(--neon2);
+  margin:1.2rem 0 .6rem;display:flex;align-items:center;gap:.6rem;
+}
+.shop-divider::after{content:'';flex:1;height:1px;background:rgba(255,90,240,.18)}
+
+/* ================================================================
+   CLICKER PANEL
+   ================================================================ */
+#clicker-panel{
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:center;position:relative;gap:1.2rem;padding:2rem 1rem;
+}
+#progress-wrap{width:100%;max-width:220px}
+#progress-label{
+  font-family:var(--font-hud);font-size:.52rem;letter-spacing:.15em;
+  color:var(--text-dim);margin-bottom:.35rem;display:flex;justify-content:space-between;
+}
+#progress-bar{height:4px;background:rgba(255,255,255,.05);border-radius:4px;overflow:hidden}
+#progress-fill{
+  height:100%;width:0%;
+  background:linear-gradient(90deg,var(--neon),var(--neon2));
+  box-shadow:0 0 8px var(--neon);border-radius:4px;transition:width .4s ease;
+}
+#core-wrap{position:relative;display:flex;align-items:center;justify-content:center}
+.orbit{position:absolute;border-radius:50%;border:1px solid transparent;pointer-events:none}
+.orbit-1{width:260px;height:260px;border-color:rgba(61,232,255,.08);animation:orbit-spin 20s linear infinite}
+.orbit-2{width:220px;height:220px;border-color:rgba(255,90,240,.06);animation:orbit-spin 12s linear infinite reverse}
+.orbit-3{width:300px;height:300px;border-color:rgba(74,255,176,.05);animation:orbit-spin 35s linear infinite}
+.orbit-dot{position:absolute;width:5px;height:5px;border-radius:50%;top:0;left:50%;margin-left:-2.5px;margin-top:-2.5px}
+.orbit-1>.orbit-dot{background:var(--neon);box-shadow:var(--glow-c)}
+.orbit-2>.orbit-dot{background:var(--neon2);box-shadow:var(--glow-m)}
+@keyframes orbit-spin{to{transform:rotate(360deg)}}
+
+#core-btn{
+  position:relative;width:190px;height:190px;border-radius:50%;border:none;
+  background:transparent;cursor:pointer;display:flex;align-items:center;
+  justify-content:center;outline:none;transition:transform .1s ease;z-index:2;
+}
+#core-btn:active{transform:scale(.91)}
+
+.core-ring{position:absolute;border-radius:50%;border-style:solid;border-color:transparent;pointer-events:none}
+.ring-a{inset:0;border-width:2px;border-top-color:var(--neon);border-right-color:rgba(61,232,255,.2);animation:spin-cw 5s linear infinite;filter:drop-shadow(0 0 4px var(--neon))}
+.ring-b{inset:14px;border-width:2px;border-bottom-color:var(--neon2);border-left-color:rgba(255,90,240,.2);animation:spin-cw 3s linear infinite reverse;filter:drop-shadow(0 0 4px var(--neon2))}
+.ring-c{inset:28px;border-width:1px;border-top-color:var(--neon3);border-right-color:rgba(255,216,74,.15);animation:spin-cw 7s linear infinite;filter:drop-shadow(0 0 3px var(--neon3))}
+@keyframes spin-cw{to{transform:rotate(360deg)}}
+
+.core-sphere{
+  position:absolute;inset:36px;border-radius:50%;
+  background:radial-gradient(circle at 38% 35%,rgba(120,200,255,.35) 0%,rgba(61,150,255,.12) 40%,rgba(30,80,200,.05) 70%,transparent 100%);
+  box-shadow:inset 0 0 30px rgba(61,232,255,.15),0 0 50px rgba(61,232,255,.12),0 0 100px rgba(61,232,255,.06);
+  animation:sphere-breathe 3.5s ease-in-out infinite;
+}
+@keyframes sphere-breathe{0%,100%{opacity:.75;transform:scale(1)}50%{opacity:1;transform:scale(1.07)}}
+
+.core-icon{
+  position:relative;z-index:3;font-size:3.2rem;
+  filter:drop-shadow(0 0 12px var(--neon)) drop-shadow(0 0 24px var(--neon));
+  transition:filter .15s,transform .1s;user-select:none;
+}
+#core-btn:hover .core-icon{filter:drop-shadow(0 0 18px var(--neon3)) drop-shadow(0 0 36px var(--neon3))}
+#core-btn:active .core-icon{transform:scale(.88)}
+
+.core-flash{position:absolute;inset:0;border-radius:50%;border:2px solid var(--neon3);opacity:0;pointer-events:none}
+.core-flash.flash{animation:flash-ring .35s ease-out forwards}
+@keyframes flash-ring{0%{opacity:.8;transform:scale(.9)}100%{opacity:0;transform:scale(1.4)}}
+
+#click-stats{display:flex;gap:.6rem;flex-wrap:wrap;justify-content:center;max-width:240px}
+.stat-pill{
+  font-family:var(--font-hud);font-size:.52rem;letter-spacing:.08em;
+  background:var(--surface2);border:1px solid var(--border);border-radius:100px;
+  padding:.3rem .7rem;color:var(--text-dim);
+}
+.stat-pill span{color:var(--neon4);font-weight:600}
+
+/* ================================================================
+   PARTICLES
+   ================================================================ */
+#particles{position:fixed;inset:0;pointer-events:none;z-index:100;overflow:hidden}
+.particle{
+  position:absolute;font-family:var(--font-hud);font-size:.8rem;font-weight:700;
+  color:var(--neon3);text-shadow:0 0 8px var(--neon3);pointer-events:none;
+  animation:pfloat .85s ease-out forwards;
+}
+.particle.big{font-size:1.1rem;color:var(--neon4);text-shadow:0 0 10px var(--neon4)}
+@keyframes pfloat{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-90px) scale(.7)}}
+
+/* ================================================================
+   SHOP CARDS
+   ================================================================ */
+.shop-list{display:flex;flex-direction:column;gap:.45rem;margin-bottom:.5rem}
+.shop-card{
+  display:grid;grid-template-columns:2.8rem 1fr auto;
+  align-items:center;gap:.6rem;padding:.65rem .8rem;
+  border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);
+  cursor:pointer;transition:border-color .18s,background .18s,transform .1s,box-shadow .18s;
+  user-select:none;position:relative;overflow:hidden;
+}
+.shop-card::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent 0%,rgba(61,232,255,.03) 50%,transparent 100%);
+  transform:translateX(-100%);transition:transform .4s ease;
+}
+.shop-card:hover:not(.locked)::before{transform:translateX(100%)}
+.shop-card:hover:not(.locked){border-color:rgba(61,232,255,.32);background:var(--surface2);transform:translateX(4px);box-shadow:0 0 14px rgba(61,232,255,.06)}
+.shop-card:active:not(.locked){transform:translateX(4px) scale(.98)}
+.shop-card.locked{opacity:.35;cursor:not-allowed}
+.shop-card.affordable{border-color:rgba(74,255,176,.3);box-shadow:0 0 10px rgba(74,255,176,.06)}
+.shop-card.affordable .card-cost{color:var(--neon4)}
+.shop-card[data-type="generator"].affordable{border-color:rgba(255,90,240,.28);box-shadow:0 0 10px rgba(255,90,240,.06)}
+.shop-card[data-type="generator"].affordable .card-cost{color:var(--neon2)}
+.shop-card::after{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;border-radius:2px 0 0 2px;background:var(--card-tier-color,transparent);box-shadow:0 0 6px var(--card-tier-color,transparent)}
+
+.card-icon{width:2.8rem;height:2.8rem;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;background:rgba(61,232,255,.06);border:1px solid rgba(61,232,255,.1);flex-shrink:0}
+.card-info{min-width:0}
+.card-name{font-family:var(--font-hud);font-size:.58rem;letter-spacing:.09em;color:var(--text-bright);margin-bottom:.15rem}
+.card-desc{font-size:.72rem;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-right{text-align:right;flex-shrink:0}
+.card-cost{font-family:var(--font-hud);font-size:.62rem;color:var(--neon3)}
+.card-owned{font-size:.66rem;color:var(--text-dim);margin-top:.15rem}
+.card-owned span{color:var(--neon);font-weight:700}
+.card-dps{font-size:.6rem;color:var(--text-dim);margin-top:.1rem}
+.card-dps span{color:var(--neon2)}
+
+/* ================================================================
+   ACHIEVEMENTS
+   ================================================================ */
+#ach-grid{display:flex;flex-direction:column;gap:.4rem}
+.ach-card{display:flex;align-items:center;gap:.65rem;padding:.6rem .75rem;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);transition:border-color .3s,background .3s}
+.ach-card.unlocked{border-color:rgba(255,216,74,.38);background:rgba(255,216,74,.04)}
+.ach-icon{font-size:1.3rem;width:2rem;flex-shrink:0;text-align:center;filter:grayscale(1);opacity:.25;transition:filter .4s,opacity .4s}
+.ach-card.unlocked .ach-icon{filter:grayscale(0);opacity:1;text-shadow:0 0 12px var(--neon3)}
+.ach-body{min-width:0}
+.ach-name{font-family:var(--font-hud);font-size:.58rem;letter-spacing:.1em;color:var(--text);margin-bottom:.12rem}
+.ach-desc{font-size:.7rem;color:var(--text-dim)}
+.ach-card.unlocked .ach-name{color:var(--neon3)}
+#ach-chip{
+  display:inline-flex;align-items:center;gap:.4rem;
+  font-family:var(--font-hud);font-size:.55rem;letter-spacing:.12em;
+  background:var(--surface2);border:1px solid var(--border);border-radius:100px;
+  padding:.3rem .75rem;margin-bottom:.8rem;
+}
+#ach-chip .chip-val{color:var(--neon3);font-weight:700}
+
+/* ================================================================
+   TOAST
+   ================================================================ */
+#toast{
+  position:fixed;bottom:1.8rem;left:50%;
+  transform:translateX(-50%) translateY(28px);
+  padding:.6rem 1.4rem;border-radius:100px;
+  font-family:var(--font-hud);font-size:.62rem;letter-spacing:.12em;
+  pointer-events:none;opacity:0;transition:opacity .28s,transform .28s;
+  z-index:500;white-space:nowrap;
+  background:var(--surface2);border:1px solid var(--neon);color:var(--neon);box-shadow:var(--glow-c);
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.ach{border-color:var(--neon3);color:var(--neon3);box-shadow:var(--glow-y)}
+#toast.buy{border-color:var(--neon4);color:var(--neon4);box-shadow:var(--glow-g)}
+#toast.save-ok{border-color:var(--neon3);color:var(--neon3);box-shadow:var(--glow-y)}
+
+/* ================================================================
+   RESPONSIVE
+   ================================================================ */
+@media(max-width:1100px){#main-layout{grid-template-columns:240px 1fr 240px}}
+@media(max-width:900px){
+  #main-layout{grid-template-columns:1fr 1fr;grid-template-rows:auto auto}
+  #clicker-panel{grid-column:1/-1;border-bottom:1px solid var(--border);padding:1.5rem}
+  #shop-panel{border-right:1px solid var(--border)}
+}
+@media(max-width:580px){
+  #main-layout{grid-template-columns:1fr}
+  #score-area{gap:.9rem}
+  .stat-divider{display:none}
+  section.panel{max-height:none}
+  #header-actions{gap:.35rem}
+}
+  </style>
+</head>
+<body>
+
+<!-- Background layers (always visible) -->
+<canvas id="starfield"></canvas>
+<div id="nebula"></div>
+
+<!-- ================================================================
+     MENU SCREEN
+     ================================================================ -->
+<div id="menu-screen">
+  <!-- Decorative animated orb -->
+  <div class="menu-ring-wrap">
+    <div class="menu-ring menu-ring-a"></div>
+    <div class="menu-ring menu-ring-b"></div>
+    <div class="menu-ring menu-ring-c"></div>
+    <div class="menu-sphere"></div>
+    <span class="menu-icon">⚡</span>
+  </div>
+
+  <h1 class="menu-title">ENERGY CLICKER</h1>
+  <p class="menu-sub">COSMIC HARVEST SIMULATOR</p>
+
+  <!-- Shows save-file summary when a save exists -->
+  <div id="save-preview" class="no-save">NO SAVE DATA FOUND</div>
+
+  <div class="menu-buttons">
+    <button class="menu-btn start"    id="btn-start">▶ &nbsp;NEW GAME</button>
+    <button class="menu-btn load"     id="btn-load" disabled>⬆ &nbsp;LOAD GAME</button>
+    <button class="menu-btn exit-btn" id="btn-exit">✕ &nbsp;EXIT</button>
+  </div>
+</div>
+
+<!-- ================================================================
+     EXIT CONFIRM DIALOG
+     ================================================================ -->
+<div id="exit-dialog">
+  <div class="dialog-box">
+    <div class="dialog-title">CONFIRM EXIT</div>
+    <div class="dialog-body">
+      Are you sure you want to exit?<br/>
+      <small style="color:var(--text-dim)">Unsaved progress will be lost.</small>
+    </div>
+    <div class="dialog-btns">
+      <button class="dialog-btn cancel" id="exit-cancel">CANCEL</button>
+      <button class="dialog-btn confirm" id="exit-confirm">EXIT</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     GAME UI  (hidden until Start/Load)
+     ================================================================ -->
+<div id="game-ui">
+
+  <!-- Header -->
+  <header id="header">
+    <div id="title-block">
+      <span class="title-star">✦</span>
+      <h1>ENERGY CLICKER</h1>
+      <span class="title-star">✦</span>
+    </div>
+
+    <div id="score-area">
+      <div class="stat-block">
+        <span class="stat-value" id="sv-energy">0</span>
+        <span class="stat-label">ENERGY</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-block" id="stat-cps">
+        <span class="stat-value" id="sv-cps">0</span>
+        <span class="stat-label">/ SEC</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-block" id="stat-cpc">
+        <span class="stat-value" id="sv-cpc">1</span>
+        <span class="stat-label">/ CLICK</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-block" id="stat-total">
+        <span class="stat-value" id="sv-total">0</span>
+        <span class="stat-label">ALL-TIME</span>
+      </div>
+    </div>
+
+    <!-- Action buttons -->
+    <div id="header-actions">
+      <button class="hdr-btn save"         id="save-btn">💾 SAVE</button>
+      <button class="hdr-btn music"        id="music-btn">♪ MUSIC: OFF</button>
+      <button class="hdr-btn menu-return"  id="menu-btn">☰ MENU</button>
+    </div>
+  </header>
+
+  <!-- Main layout -->
+  <main id="main-layout">
+
+    <!-- LEFT: Clicker -->
+    <section id="clicker-panel" class="panel">
+      <div id="progress-wrap">
+        <div id="progress-label">
+          <span id="prog-label-text">NEXT MILESTONE</span>
+          <span id="prog-pct">0%</span>
+        </div>
+        <div id="progress-bar"><div id="progress-fill"></div></div>
+      </div>
+      <div id="core-wrap">
+        <div class="orbit orbit-3"></div>
+        <div class="orbit orbit-1"><div class="orbit-dot"></div></div>
+        <div class="orbit orbit-2"><div class="orbit-dot"></div></div>
+        <button id="core-btn" aria-label="Harvest cosmic energy">
+          <div class="core-ring ring-a"></div>
+          <div class="core-ring ring-b"></div>
+          <div class="core-ring ring-c"></div>
+          <div class="core-sphere"></div>
+          <div class="core-flash" id="core-flash"></div>
+          <span class="core-icon">⚡</span>
+        </button>
+      </div>
+      <div id="click-stats">
+        <div class="stat-pill">Clicks: <span id="pill-clicks">0</span></div>
+        <div class="stat-pill">Upgrades: <span id="pill-upgrades">0</span></div>
+        <div class="stat-pill">Generators: <span id="pill-generators">0</span></div>
+      </div>
+    </section>
+
+    <!-- CENTER: Shop -->
+    <section id="shop-panel" class="panel">
+      <h2 class="panel-title">UPGRADES</h2>
+      <p class="panel-sub">Amplify energy per click</p>
+      <div class="shop-list" id="upgrades-list"></div>
+      <div class="shop-divider">GENERATORS</div>
+      <p class="panel-sub">Autonomous energy production</p>
+      <div class="shop-list" id="generators-list"></div>
+    </section>
+
+    <!-- RIGHT: Achievements -->
+    <section id="ach-panel" class="panel">
+      <h2 class="panel-title">ACHIEVEMENTS</h2>
+      <div id="ach-chip">
+        UNLOCKED <span class="chip-val" id="ach-unlocked">0</span>
+        / <span class="chip-val" id="ach-total">0</span>
+      </div>
+      <div id="ach-grid"></div>
+    </section>
+
+  </main>
+</div><!-- /#game-ui -->
+
+<!-- Particles + toast (always on top) -->
+<div id="particles"></div>
+<div id="toast"></div>
+
+<script>
+/* ================================================================
+   ENERGY CLICKER — Full Game Script
+   ================================================================ */
+
+/* ──────────────────────────────────────────────────────────────
+   AUDIO ENGINE  (Web Audio API — zero external files)
+   ────────────────────────────────────────────────────────────── */
+var AC = null;
+function getAC() {
+  if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+  return AC;
+}
+
+function tone(freq, type, dur, vol, freqEnd, delay) {
+  type  = type  || 'sine';  dur   = dur   || 0.15;
+  vol   = vol   || 0.18;    delay = delay || 0;
+  var ac = getAC(), osc = ac.createOscillator(), gain = ac.createGain();
+  osc.connect(gain); gain.connect(ac.destination);
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, ac.currentTime + delay);
+  if (freqEnd != null)
+    osc.frequency.linearRampToValueAtTime(freqEnd, ac.currentTime + delay + dur);
+  gain.gain.setValueAtTime(0, ac.currentTime + delay);
+  gain.gain.linearRampToValueAtTime(vol, ac.currentTime + delay + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + delay + dur);
+  osc.start(ac.currentTime + delay);
+  osc.stop(ac.currentTime + delay + dur + 0.05);
+}
+
+var SFX = {
+  click:   function(){ tone(480,'triangle',.09,.14,580); },
+  buy:     function(){ tone(380,'sine',.12,.18,760); tone(760,'sine',.12,.10,null,.1); },
+  bigBuy:  function(){ tone(220,'sine',.2,.2,440); tone(440,'sine',.2,.15,660,.1); tone(660,'sine',.25,.2,880,.2); },
+  achiev:  function(){ [0,.12,.24,.38].forEach(function(d,i){ tone([660,880,1100,1320][i],'sine',.18,.22,null,d); }); },
+  locked:  function(){ tone(160,'sawtooth',.07,.08,130); },
+  menuSel: function(){ tone(520,'sine',.1,.12,620); },
+  saveOk:  function(){ tone(440,'sine',.1,.14,880); tone(880,'sine',.12,.1,null,.08); },
+};
+
+/* ── Ambient music ── */
+var musicPlaying = false, musicNodes = [];
+var SCALE = [110,130.81,146.83,164.81,196,220,261.63,293.66,329.63,392,440];
+
+function startMusic() {
+  var ac = getAC(); musicNodes = [];
+  function makeDrone(freq, vol) {
+    var osc=ac.createOscillator(), g=ac.createGain(), lfo=ac.createOscillator(), lg=ac.createGain();
+    lfo.frequency.value=0.07+Math.random()*.05; lg.gain.value=freq*.003;
+    lfo.connect(lg); lg.connect(osc.frequency);
+    osc.type='sine'; osc.frequency.value=freq; g.gain.value=vol;
+    osc.connect(g); g.connect(ac.destination);
+    osc.start(); lfo.start(); musicNodes.push(osc,g,lfo,lg);
+  }
+  makeDrone(55,.08); makeDrone(55.4,.06);
+  function schedPad() {
+    if (!musicPlaying) return;
+    [0,2,4,7].forEach(function(i){
+      var osc=ac.createOscillator(), g=ac.createGain(), dur=6+Math.random()*4;
+      osc.type='sine'; osc.frequency.value=SCALE[i%SCALE.length]*2;
+      g.gain.setValueAtTime(0,ac.currentTime);
+      g.gain.linearRampToValueAtTime(.04,ac.currentTime+2);
+      g.gain.linearRampToValueAtTime(.04,ac.currentTime+dur-2);
+      g.gain.linearRampToValueAtTime(0,ac.currentTime+dur);
+      osc.connect(g); g.connect(ac.destination);
+      osc.start(); osc.stop(ac.currentTime+dur); musicNodes.push(osc,g);
+    });
+    setTimeout(schedPad,(4+Math.random()*6)*1000);
+  }
+  schedPad();
+  var bpf=ac.createBiquadFilter(); bpf.type='highpass'; bpf.frequency.value=1200;
+  bpf.connect(ac.destination); musicNodes.push(bpf);
+  var arpStep=0, arpPat=[0,2,4,7,9,7,4,2];
+  function schedArp() {
+    if (!musicPlaying) return;
+    var osc=ac.createOscillator(), g=ac.createGain();
+    osc.type=Math.random()>.6?'square':'triangle';
+    osc.frequency.value=SCALE[arpPat[arpStep%arpPat.length]%SCALE.length]*4;
+    g.gain.setValueAtTime(.04,ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+.3);
+    osc.connect(g); g.connect(bpf);
+    osc.start(); osc.stop(ac.currentTime+.35); musicNodes.push(osc,g);
+    arpStep++; setTimeout(schedArp,Math.random()>.85?1400:700);
+  }
+  setTimeout(schedArp,2000);
+}
+function stopMusic() {
+  musicNodes.forEach(function(n){ try{ if(n.stop)n.stop(); n.disconnect(); }catch(e){} });
+  musicNodes=[];
+}
+
+/* ──────────────────────────────────────────────────────────────
+   GAME STATE  (single source of truth, also serialised for save)
+   ────────────────────────────────────────────────────────────── */
+var G = {
+  energy:0, totalEarned:0,
+  energyPerClick:1, energyPerSec:0,
+  totalClicks:0, upgradesBought:0, generatorsBought:0,
+};
+
+/* ──────────────────────────────────────────────────────────────
+   UPGRADES  (20)
+   ────────────────────────────────────────────────────────────── */
+var UPGRADES = [
+  {id:'focus-lens',     name:'Focus Lens',         icon:'🔭',tier:1,desc:'+2/click',       baseCost:50,      mult:2.2, bonus:2       },
+  {id:'plasma-amp',     name:'Plasma Amp',          icon:'🌀',tier:1,desc:'+5/click',       baseCost:200,     mult:2.3, bonus:5       },
+  {id:'dark-catalyst',  name:'Dark Catalyst',       icon:'🌑',tier:1,desc:'+15/click',      baseCost:800,     mult:2.4, bonus:15      },
+  {id:'nova-core',      name:'Nova Core',           icon:'💥',tier:2,desc:'+40/click',      baseCost:4000,    mult:2.5, bonus:40      },
+  {id:'quantum-tap',    name:'Quantum Tap',         icon:'⚛️',tier:2,desc:'+100/click',     baseCost:18000,   mult:2.55,bonus:100     },
+  {id:'void-siphon',    name:'Void Siphon',         icon:'🕳️',tier:2,desc:'+250/click',     baseCost:75000,   mult:2.6, bonus:250     },
+  {id:'stellar-conduit',name:'Stellar Conduit',     icon:'🌐',tier:3,desc:'+600/click',     baseCost:300000,  mult:2.65,bonus:600     },
+  {id:'nebula-harvester',name:'Nebula Harvester',   icon:'🌌',tier:3,desc:'+1,500/click',   baseCost:1.2e6,   mult:2.7, bonus:1500    },
+  {id:'pulsar-glove',   name:'Pulsar Glove',        icon:'🥊',tier:3,desc:'+4,000/click',   baseCost:5e6,     mult:2.75,bonus:4000    },
+  {id:'singularity-tap',name:'Singularity Tap',     icon:'🌀',tier:4,desc:'+10,000/click',  baseCost:25e6,    mult:2.8, bonus:10000   },
+  {id:'dark-matter-lens',name:'Dark Matter Lens',   icon:'🔬',tier:4,desc:'+25,000/click',  baseCost:100e6,   mult:2.85,bonus:25000   },
+  {id:'quasar-cannon',  name:'Quasar Cannon',       icon:'🔫',tier:4,desc:'+60,000/click',  baseCost:500e6,   mult:2.9, bonus:60000   },
+  {id:'antimatter-spike',name:'Antimatter Spike',   icon:'⚗️',tier:5,desc:'+150k/click',    baseCost:2e9,     mult:2.95,bonus:150000  },
+  {id:'cosmic-string',  name:'Cosmic String',       icon:'🧵',tier:5,desc:'+400k/click',    baseCost:10e9,    mult:3.0, bonus:400000  },
+  {id:'dimensional-rift',name:'Dimensional Rift',   icon:'🌀',tier:5,desc:'+1M/click',      baseCost:50e9,    mult:3.05,bonus:1e6     },
+  {id:'neutron-amp',    name:'Neutron Amplifier',   icon:'🔋',tier:6,desc:'+2.5M/click',    baseCost:200e9,   mult:3.1, bonus:2.5e6   },
+  {id:'blackhole-tap',  name:'Black Hole Tap',      icon:'🕳️',tier:6,desc:'+6M/click',      baseCost:800e9,   mult:3.15,bonus:6e6     },
+  {id:'galactic-core',  name:'Galactic Core',       icon:'🌠',tier:6,desc:'+15M/click',     baseCost:3e12,    mult:3.2, bonus:15e6    },
+  {id:'universe-engine',name:'Universe Engine',     icon:'🚀',tier:7,desc:'+40M/click',     baseCost:15e12,   mult:3.3, bonus:40e6    },
+  {id:'omni-catalyst',  name:'Omni Catalyst',       icon:'✨',tier:7,desc:'+100M/click',    baseCost:80e12,   mult:3.5, bonus:100e6   },
+].map(function(u){ return Object.assign({cost:u.baseCost,owned:0},u); });
+
+/* ──────────────────────────────────────────────────────────────
+   GENERATORS  (15)
+   ────────────────────────────────────────────────────────────── */
+var GENERATORS = [
+  {id:'solar-collector', name:'Solar Collector',    icon:'☀️',tier:1,desc:'+1/sec',         baseCost:100,     mult:1.80,prod:1      },
+  {id:'orbital-station', name:'Orbital Station',    icon:'🛸',tier:1,desc:'+5/sec',         baseCost:600,     mult:1.82,prod:5      },
+  {id:'pulsar-tap',      name:'Pulsar Tap',         icon:'🌟',tier:2,desc:'+20/sec',        baseCost:3000,    mult:1.85,prod:20     },
+  {id:'asteroid-mine',   name:'Asteroid Mine',      icon:'☄️',tier:2,desc:'+60/sec',        baseCost:15000,   mult:1.87,prod:60     },
+  {id:'comet-catcher',   name:'Comet Catcher',      icon:'💫',tier:2,desc:'+180/sec',       baseCost:75000,   mult:1.9, prod:180    },
+  {id:'gas-extractor',   name:'Gas Giant Extractor',icon:'🪐',tier:3,desc:'+500/sec',       baseCost:350000,  mult:1.92,prod:500    },
+  {id:'star-furnace',    name:'Star Furnace',       icon:'🌞',tier:3,desc:'+1,500/sec',     baseCost:1.5e6,   mult:1.95,prod:1500   },
+  {id:'neutron-conduit', name:'Neutron Conduit',    icon:'💡',tier:3,desc:'+5,000/sec',     baseCost:8e6,     mult:1.97,prod:5000   },
+  {id:'bh-siphon',       name:'Black Hole Siphon',  icon:'🕳️',tier:4,desc:'+15,000/sec',    baseCost:40e6,    mult:2.0, prod:15000  },
+  {id:'quasar-tap',      name:'Quasar Tap',         icon:'🔆',tier:4,desc:'+50,000/sec',    baseCost:200e6,   mult:2.05,prod:50000  },
+  {id:'galaxy-harvester',name:'Galaxy Harvester',   icon:'🌌',tier:5,desc:'+150,000/sec',   baseCost:1e9,     mult:2.1, prod:150000 },
+  {id:'dark-matter-farm',name:'Dark Matter Farm',   icon:'🌑',tier:5,desc:'+500k/sec',      baseCost:5e9,     mult:2.15,prod:5e5    },
+  {id:'void-reactor',    name:'Void Reactor',       icon:'⚡',tier:6,desc:'+1.5M/sec',      baseCost:25e9,    mult:2.2, prod:1.5e6  },
+  {id:'universal-engine',name:'Universal Engine',   icon:'🚀',tier:6,desc:'+5M/sec',        baseCost:150e9,   mult:2.3, prod:5e6    },
+  {id:'bigbang-emitter', name:'Big Bang Emitter',   icon:'💥',tier:7,desc:'+20M/sec',       baseCost:1e12,    mult:2.5, prod:20e6   },
+].map(function(g){ return Object.assign({cost:g.baseCost,owned:0},g); });
+
+/* ──────────────────────────────────────────────────────────────
+   ACHIEVEMENTS  (35)
+   ────────────────────────────────────────────────────────────── */
+var ACHIEVEMENTS = [
+  {id:'e1', icon:'⚡',name:'First Spark',        desc:'Collect 1 energy',                  chk:function(){return G.totalEarned>=1}},
+  {id:'e2', icon:'💡',name:'Power Up',           desc:'Reach 100 total energy',            chk:function(){return G.totalEarned>=100}},
+  {id:'e3', icon:'🔋',name:'Power Surge',        desc:'Reach 1,000 total energy',          chk:function(){return G.totalEarned>=1000}},
+  {id:'e4', icon:'🌠',name:'Stellar Hoard',      desc:'Reach 10,000 total energy',         chk:function(){return G.totalEarned>=10000}},
+  {id:'e5', icon:'🌟',name:'Star Merchant',      desc:'Reach 100,000 total energy',        chk:function(){return G.totalEarned>=1e5}},
+  {id:'e6', icon:'🌌',name:'Galactic Wealth',    desc:'Reach 1 million total energy',      chk:function(){return G.totalEarned>=1e6}},
+  {id:'e7', icon:'🌀',name:'Billion Joules',     desc:'Reach 1 billion total energy',      chk:function(){return G.totalEarned>=1e9}},
+  {id:'e8', icon:'🔮',name:'Cosmic Emperor',     desc:'Reach 1 trillion total energy',     chk:function(){return G.totalEarned>=1e12}},
+  {id:'e9', icon:'✨',name:'Omniverse Lord',     desc:'Reach 1 quadrillion total energy',  chk:function(){return G.totalEarned>=1e15}},
+  {id:'c1', icon:'👆',name:'Getting Started',    desc:'Click 10 times',                    chk:function(){return G.totalClicks>=10}},
+  {id:'c2', icon:'✌️',name:'Eager Harvester',    desc:'Click 50 times',                    chk:function(){return G.totalClicks>=50}},
+  {id:'c3', icon:'⛈️',name:'Click Storm',        desc:'Click 200 times',                   chk:function(){return G.totalClicks>=200}},
+  {id:'c4', icon:'🌪️',name:'Click Cyclone',      desc:'Click 1,000 times',                 chk:function(){return G.totalClicks>=1000}},
+  {id:'c5', icon:'🚀',name:'Hyperspeed Fingers', desc:'Click 5,000 times',                 chk:function(){return G.totalClicks>=5000}},
+  {id:'c6', icon:'🤯',name:'Click Legend',       desc:'Click 20,000 times',                chk:function(){return G.totalClicks>=20000}},
+  {id:'p1', icon:'🔧',name:'Tinkerer',           desc:'Make your first purchase',          chk:function(){return G.upgradesBought+G.generatorsBought>=1}},
+  {id:'p2', icon:'⚙️',name:'Engineer',           desc:'Make 10 total purchases',           chk:function(){return G.upgradesBought+G.generatorsBought>=10}},
+  {id:'p3', icon:'🏗️',name:'Architect',          desc:'Make 25 total purchases',           chk:function(){return G.upgradesBought+G.generatorsBought>=25}},
+  {id:'p4', icon:'🏭',name:'Industrialist',      desc:'Make 50 total purchases',           chk:function(){return G.upgradesBought+G.generatorsBought>=50}},
+  {id:'p5', icon:'👑',name:'Monopolist',         desc:'Make 100 total purchases',          chk:function(){return G.upgradesBought+G.generatorsBought>=100}},
+  {id:'u1', icon:'🔭',name:'Observer',           desc:'Own 5 upgrades',                    chk:function(){return G.upgradesBought>=5}},
+  {id:'u2', icon:'🔬',name:'Scientist',          desc:'Own 10 upgrades',                   chk:function(){return G.upgradesBought>=10}},
+  {id:'u3', icon:'🏆',name:'Master Technician',  desc:'Purchase all 20 upgrades',          chk:function(){return G.upgradesBought>=20}},
+  {id:'g1', icon:'⚙️',name:'Power Plant',        desc:'Own 3 different generators',        chk:function(){return GENERATORS.filter(function(g){return g.owned>0}).length>=3}},
+  {id:'g2', icon:'🏗️',name:'Grid Master',        desc:'Own 8 different generators',        chk:function(){return GENERATORS.filter(function(g){return g.owned>0}).length>=8}},
+  {id:'g3', icon:'🌐',name:'Dyson Sphere',       desc:'Own all 15 generators',             chk:function(){return GENERATORS.filter(function(g){return g.owned>0}).length>=15}},
+  {id:'ps1',icon:'🤖',name:'Passive Income',     desc:'Reach 10 energy/sec',               chk:function(){return G.energyPerSec>=10}},
+  {id:'ps2',icon:'🌊',name:'Energy Flood',       desc:'Reach 1,000 energy/sec',            chk:function(){return G.energyPerSec>=1000}},
+  {id:'ps3',icon:'🌋',name:'Volcanic Output',    desc:'Reach 1,000,000 energy/sec',        chk:function(){return G.energyPerSec>=1e6}},
+  {id:'ps4',icon:'💫',name:'Quasar Engine',      desc:'Reach 1 billion energy/sec',        chk:function(){return G.energyPerSec>=1e9}},
+  {id:'cc1',icon:'🥊',name:'Power Puncher',      desc:'Reach 50 energy/click',             chk:function(){return G.energyPerClick>=50}},
+  {id:'cc2',icon:'⚡',name:'Thunderstrike',      desc:'Reach 1,000 energy/click',          chk:function(){return G.energyPerClick>=1000}},
+  {id:'cc3',icon:'💥',name:'Megaton Click',      desc:'Reach 1M energy/click',             chk:function(){return G.energyPerClick>=1e6}},
+  {id:'h1', icon:'💰',name:'Energy Hoarder',     desc:'Hold 1 million energy at once',     chk:function(){return G.energy>=1e6}},
+  {id:'h2', icon:'🏦',name:'Energy Billionaire', desc:'Hold 1 billion energy at once',     chk:function(){return G.energy>=1e9}},
+].map(function(a){ return Object.assign({unlocked:false},a); });
+
+var MILESTONES  = [100,1000,10000,1e5,1e6,1e7,1e8,1e9,1e10,1e12,1e15];
+var TIER_COLORS = {1:'#3de8ff',2:'#4affb0',3:'#ffd84a',4:'#ff6b4a',5:'#ff5af0',6:'#9b6aff',7:'#ff4a6a'};
+var SAVE_KEY    = 'energyclicker_save';
+
+/* ──────────────────────────────────────────────────────────────
+   DOM REFS
+   ────────────────────────────────────────────────────────────── */
+function $id(id){ return document.getElementById(id); }
+var D = {
+  svEnergy:   $id('sv-energy'),   svCps:      $id('sv-cps'),
+  svCpc:      $id('sv-cpc'),      svTotal:    $id('sv-total'),
+  coreBtn:    $id('core-btn'),    coreFlash:  $id('core-flash'),
+  upgradeList:$id('upgrades-list'),genList:   $id('generators-list'),
+  achGrid:    $id('ach-grid'),    achUnlocked:$id('ach-unlocked'),
+  achTotal:   $id('ach-total'),   particles:  $id('particles'),
+  toast:      $id('toast'),       starfield:  $id('starfield'),
+  musicBtn:   $id('music-btn'),   menuBtn:    $id('menu-btn'),
+  saveBtn:    $id('save-btn'),    gameUI:     $id('game-ui'),
+  menuScreen: $id('menu-screen'), savePreview:$id('save-preview'),
+  btnStart:   $id('btn-start'),   btnLoad:    $id('btn-load'),
+  btnExit:    $id('btn-exit'),    exitDialog: $id('exit-dialog'),
+  exitConfirm:$id('exit-confirm'),exitCancel: $id('exit-cancel'),
+  progFill:   $id('progress-fill'),progLabel: $id('prog-label-text'),
+  progPct:    $id('prog-pct'),    pillClicks: $id('pill-clicks'),
+  pillUpg:    $id('pill-upgrades'),pillGen:   $id('pill-generators'),
+};
+
+/* ──────────────────────────────────────────────────────────────
+   SAVE / LOAD
+   ────────────────────────────────────────────────────────────── */
+function buildSavePayload() {
+  // Capture current state + item owned counts
+  return JSON.stringify({
+    v: 2, // save version
+    savedAt: Date.now(),
+    G: G,
+    upgrades:   UPGRADES.map(function(u){ return {id:u.id, owned:u.owned, cost:u.cost}; }),
+    generators: GENERATORS.map(function(g){ return {id:g.id, owned:g.owned, cost:g.cost}; }),
+    achievements: ACHIEVEMENTS.map(function(a){ return {id:a.id, unlocked:a.unlocked}; }),
+  });
+}
+
+function saveGame() {
+  try {
+    localStorage.setItem(SAVE_KEY, buildSavePayload());
+    return true;
+  } catch(e) { return false; }
+}
+
+function loadSaveData() {
+  try {
+    var raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch(e) { return null; }
+}
+
+// Apply a parsed save object to the live game state
+function applySave(data) {
+  // Restore G fields
+  Object.keys(data.G).forEach(function(k){ G[k] = data.G[k]; });
+
+  // Restore upgrade states
+  data.upgrades.forEach(function(saved){
+    var u = UPGRADES.find(function(x){ return x.id===saved.id; });
+    if (u){ u.owned=saved.owned; u.cost=saved.cost; }
+  });
+
+  // Restore generator states
+  data.generators.forEach(function(saved){
+    var g = GENERATORS.find(function(x){ return x.id===saved.id; });
+    if (g){ g.owned=saved.owned; g.cost=saved.cost; }
+  });
+
+  // Restore achievements
+  data.achievements.forEach(function(saved){
+    var a = ACHIEVEMENTS.find(function(x){ return x.id===saved.id; });
+    if (a) a.unlocked = saved.unlocked;
+  });
+}
+
+// Reset all game data to initial values
+function resetGame() {
+  G.energy=0; G.totalEarned=0; G.energyPerClick=1; G.energyPerSec=0;
+  G.totalClicks=0; G.upgradesBought=0; G.generatorsBought=0;
+  UPGRADES.forEach(function(u){ u.owned=0; u.cost=u.baseCost; });
+  GENERATORS.forEach(function(g){ g.owned=0; g.cost=g.baseCost; });
+  ACHIEVEMENTS.forEach(function(a){ a.unlocked=false; });
+}
+
+// Format a timestamp as a human-readable date
+function fmtDate(ts) {
+  var d = new Date(ts);
+  return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+}
+
+// Update the menu save-preview chip
+function refreshSavePreview() {
+  var data = loadSaveData();
+  if (!data) {
+    D.savePreview.textContent = 'NO SAVE DATA FOUND';
+    D.savePreview.className   = 'no-save';
+    D.btnLoad.disabled        = true;
+    return;
+  }
+  D.savePreview.className = '';
+  D.savePreview.innerHTML =
+    '⚡ <span>'+fmt(data.G.totalEarned)+'</span> total energy &nbsp;·&nbsp; '+
+    'Saved: <span>'+fmtDate(data.savedAt)+'</span>';
+  D.btnLoad.disabled = false;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   SCREEN TRANSITIONS
+   ────────────────────────────────────────────────────────────── */
+var gameStarted = false, tickRunning = false;
+
+function showMenu() {
+  // Pause passive income while in menu
+  D.menuScreen.classList.remove('hidden');
+  D.gameUI.classList.remove('visible');
+  refreshSavePreview();
+  if (musicPlaying) { stopMusic(); musicPlaying=false; D.musicBtn.textContent='♪ MUSIC: OFF'; D.musicBtn.classList.remove('on'); }
+}
+
+function showGame() {
+  D.menuScreen.classList.add('hidden');
+  D.gameUI.classList.add('visible');
+  // Render shop + achievements if first load
+  if (!gameStarted) {
+    renderShop();
+    renderAchievements();
+    D.achTotal.textContent    = ACHIEVEMENTS.length;
+    D.achUnlocked.textContent = ACHIEVEMENTS.filter(function(a){return a.unlocked}).length;
+    if (!tickRunning) { tickRunning=true; requestAnimationFrame(gameTick); }
+    gameStarted = true;
+  }
+  updateUI();
+}
+
+/* ──────────────────────────────────────────────────────────────
+   MENU BUTTON HANDLERS
+   ────────────────────────────────────────────────────────────── */
+D.btnStart.addEventListener('click', function(){
+  SFX.menuSel();
+  resetGame();
+  gameStarted = false; // force re-render of shop/achievements with fresh state
+  showGame();
+});
+
+D.btnLoad.addEventListener('click', function(){
+  var data = loadSaveData();
+  if (!data) return;
+  SFX.menuSel();
+  resetGame();
+  applySave(data);
+  gameStarted = false;
+  showGame();
+  showToast('Save loaded!', 'save-ok');
+});
+
+D.btnExit.addEventListener('click', function(){
+  SFX.menuSel();
+  // Show exit confirmation dialog
+  D.exitDialog.classList.add('show');
+});
+
+D.exitConfirm.addEventListener('click', function(){
+  // Attempt to close the window/tab
+  window.close();
+  // Fallback: show a message if window.close() was blocked
+  D.exitDialog.classList.remove('show');
+  showToast('Close this tab to exit.', '');
+});
+
+D.exitCancel.addEventListener('click', function(){
+  D.exitDialog.classList.remove('show');
+});
+
+/* ──────────────────────────────────────────────────────────────
+   IN-GAME HEADER BUTTONS
+   ────────────────────────────────────────────────────────────── */
+// Save button
+D.saveBtn.addEventListener('click', function(){
+  var ok = saveGame();
+  if (ok) {
+    SFX.saveOk();
+    D.saveBtn.classList.add('saving');
+    D.saveBtn.textContent = '✓ SAVED';
+    showToast('Game saved!', 'save-ok');
+    setTimeout(function(){
+      D.saveBtn.classList.remove('saving');
+      D.saveBtn.textContent = '💾 SAVE';
+    }, 1600);
+  } else {
+    showToast('Save failed (storage unavailable).', '');
+  }
+});
+
+// Return to menu button
+D.menuBtn.addEventListener('click', function(){
+  saveGame(); // auto-save when returning to menu
+  showMenu();
+  showToast('Progress auto-saved.', 'save-ok');
+});
+
+// Music button
+D.musicBtn.addEventListener('click', function(){
+  musicPlaying = !musicPlaying;
+  if (musicPlaying) {
+    startMusic();
+    D.musicBtn.textContent = '♪ MUSIC: ON';
+    D.musicBtn.classList.add('on');
+  } else {
+    stopMusic();
+    D.musicBtn.textContent = '♪ MUSIC: OFF';
+    D.musicBtn.classList.remove('on');
+  }
+});
+
+/* ──────────────────────────────────────────────────────────────
+   STARFIELD
+   ────────────────────────────────────────────────────────────── */
+function initStarfield() {
+  var cv=D.starfield, ctx=cv.getContext('2d'), stars=[], shooters=[];
+  function resize() {
+    cv.width=innerWidth; cv.height=innerHeight; stars=[];
+    for(var i=0;i<260;i++) stars.push({
+      x:Math.random()*cv.width, y:Math.random()*cv.height,
+      r:Math.random()*1.4+0.1,  sp:Math.random()*.12+.02,
+      a:Math.random(),           da:(Math.random()*.006+.002)*(Math.random()<.5?1:-1),
+    });
+  }
+  window.addEventListener('resize',resize); resize();
+  setInterval(function(){
+    if(Math.random()<.35) shooters.push({
+      x:Math.random()*cv.width, y:Math.random()*cv.height*.6,
+      len:80+Math.random()*120,  sp:6+Math.random()*8, a:1, ang:Math.PI/5+Math.random()*.3,
+    });
+  },2800);
+  function draw() {
+    ctx.clearRect(0,0,cv.width,cv.height);
+    stars.forEach(function(s){
+      s.a+=s.da; if(s.a<=0||s.a>=1)s.da*=-1;
+      s.y+=s.sp; if(s.y>cv.height){s.y=0;s.x=Math.random()*cv.width;}
+      ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      ctx.fillStyle='rgba(170,210,255,'+(s.a*.75)+')';ctx.fill();
+    });
+    shooters=shooters.filter(function(sh){return sh.a>0.01});
+    shooters.forEach(function(sh){
+      var ex=sh.x+Math.cos(sh.ang)*sh.len, ey=sh.y+Math.sin(sh.ang)*sh.len;
+      var g=ctx.createLinearGradient(sh.x,sh.y,ex,ey);
+      g.addColorStop(0,'rgba(255,255,255,0)');
+      g.addColorStop(1,'rgba(180,230,255,'+(sh.a*.8)+')');
+      ctx.beginPath();ctx.moveTo(sh.x,sh.y);ctx.lineTo(ex,ey);
+      ctx.strokeStyle=g;ctx.lineWidth=1.5;ctx.stroke();
+      sh.x+=Math.cos(sh.ang)*sh.sp;sh.y+=Math.sin(sh.ang)*sh.sp;sh.a*=.96;
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+/* ──────────────────────────────────────────────────────────────
+   NUMBER FORMATTING
+   ────────────────────────────────────────────────────────────── */
+function fmt(n) {
+  n=Math.floor(n);
+  if(n>=1e15)return(n/1e15).toFixed(2)+'Qa';
+  if(n>=1e12)return(n/1e12).toFixed(2)+'T';
+  if(n>=1e9) return(n/1e9).toFixed(2)+'B';
+  if(n>=1e6) return(n/1e6).toFixed(2)+'M';
+  if(n>=1e3) return(n/1e3).toFixed(1)+'k';
+  return n.toLocaleString();
+}
+function fmtD(n) {
+  if(n>=1e12)return(n/1e12).toFixed(2)+'T';
+  if(n>=1e9) return(n/1e9).toFixed(2)+'B';
+  if(n>=1e6) return(n/1e6).toFixed(2)+'M';
+  if(n>=1e3) return(n/1e3).toFixed(1)+'k';
+  if(n>=1)   return n.toFixed(1);
+  return n.toFixed(2);
+}
+
+/* ──────────────────────────────────────────────────────────────
+   SHOP RENDERING
+   ────────────────────────────────────────────────────────────── */
+function buildCard(item, type) {
+  var card=document.createElement('div');
+  card.className='shop-card locked';
+  card.dataset.id=item.id; card.dataset.type=type;
+  card.style.setProperty('--card-tier-color', TIER_COLORS[item.tier]||'#3de8ff');
+  var extra=type==='generator'
+    ?'<div class="card-dps">+<span>'+fmtD(item.prod)+'</span>/sec</div>':'';
+  card.innerHTML=
+    '<div class="card-icon">'+item.icon+'</div>'+
+    '<div class="card-info">'+
+      '<div class="card-name">'+item.name+'</div>'+
+      '<div class="card-desc">'+item.desc+'</div>'+
+    '</div>'+
+    '<div class="card-right">'+
+      '<div class="card-cost">⚡ '+fmt(item.cost)+'</div>'+
+      '<div class="card-owned">×<span>'+item.owned+'</span></div>'+
+      extra+
+    '</div>';
+  card.addEventListener('click',function(){purchase(item,type);});
+  return card;
+}
+
+function renderShop() {
+  D.upgradeList.innerHTML=''; D.genList.innerHTML='';
+  UPGRADES.forEach(function(u){D.upgradeList.appendChild(buildCard(u,'upgrade'));});
+  GENERATORS.forEach(function(g){D.genList.appendChild(buildCard(g,'generator'));});
+}
+
+/* ──────────────────────────────────────────────────────────────
+   ACHIEVEMENT RENDERING
+   ────────────────────────────────────────────────────────────── */
+function renderAchievements() {
+  D.achGrid.innerHTML=''; D.achTotal.textContent=ACHIEVEMENTS.length;
+  ACHIEVEMENTS.forEach(function(a){
+    var div=document.createElement('div');
+    div.className='ach-card'+(a.unlocked?' unlocked':'');
+    div.dataset.id=a.id;
+    div.innerHTML='<div class="ach-icon">'+a.icon+'</div>'+
+      '<div class="ach-body"><div class="ach-name">'+a.name+'</div>'+
+      '<div class="ach-desc">'+a.desc+'</div></div>';
+    D.achGrid.appendChild(div);
+  });
+}
+
+/* ──────────────────────────────────────────────────────────────
+   UI UPDATE
+   ────────────────────────────────────────────────────────────── */
+function updateUI() {
+  D.svEnergy.textContent=fmt(G.energy); D.svCps.textContent=fmtD(G.energyPerSec);
+  D.svCpc.textContent=fmt(G.energyPerClick); D.svTotal.textContent=fmt(G.totalEarned);
+  D.pillClicks.textContent=fmt(G.totalClicks);
+  D.pillUpg.textContent=G.upgradesBought; D.pillGen.textContent=G.generatorsBought;
+
+  var nextM=MILESTONES[0], prevM=0;
+  for(var i=0;i<MILESTONES.length;i++){
+    if(MILESTONES[i]>G.totalEarned){nextM=MILESTONES[i];break;}
+    prevM=MILESTONES[i]; if(i===MILESTONES.length-1)nextM=MILESTONES[i];
+  }
+  var pct=Math.min(100,((G.totalEarned-prevM)/(nextM-prevM))*100);
+  D.progFill.style.width=pct.toFixed(1)+'%';
+  D.progPct.textContent=pct.toFixed(0)+'%';
+  D.progLabel.textContent='MILESTONE: '+fmt(nextM);
+
+  document.querySelectorAll('.shop-card').forEach(function(card){
+    var id=card.dataset.id, type=card.dataset.type;
+    var item=type==='upgrade'
+      ?UPGRADES.find(function(u){return u.id===id})
+      :GENERATORS.find(function(g){return g.id===id});
+    if(!item)return;
+    var can=G.energy>=item.cost;
+    card.classList.toggle('locked',!can); card.classList.toggle('affordable',can);
+    card.querySelector('.card-cost').textContent='⚡ '+fmt(item.cost);
+    card.querySelector('.card-owned span').textContent=item.owned;
+  });
+}
+
+/* ──────────────────────────────────────────────────────────────
+   PURCHASE
+   ────────────────────────────────────────────────────────────── */
+function purchase(item, type) {
+  if(G.energy<item.cost){SFX.locked();return;}
+  G.energy-=item.cost; item.owned++;
+  var isBig=item.tier>=5;
+  if(type==='upgrade'){G.energyPerClick+=item.bonus;G.upgradesBought++;}
+  else{G.energyPerSec+=item.prod;G.generatorsBought++;}
+  item.cost=Math.ceil(item.baseCost*Math.pow(item.mult,item.owned));
+  isBig?SFX.bigBuy():SFX.buy();
+  showToast('Purchased '+item.name,'buy'); updateUI(); checkAchievements();
+}
+
+/* ──────────────────────────────────────────────────────────────
+   CLICK HANDLER
+   ────────────────────────────────────────────────────────────── */
+D.coreBtn.addEventListener('click',function(e){
+  G.energy+=G.energyPerClick; G.totalEarned+=G.energyPerClick; G.totalClicks++;
+  SFX.click(); spawnParticle(e.clientX,e.clientY); triggerFlash();
+  bumpEl(D.svEnergy); updateUI(); checkAchievements();
+});
+
+function triggerFlash(){
+  D.coreFlash.classList.remove('flash'); void D.coreFlash.offsetWidth; D.coreFlash.classList.add('flash');
+}
+function bumpEl(el){ el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
+
+/* ──────────────────────────────────────────────────────────────
+   PARTICLES
+   ────────────────────────────────────────────────────────────── */
+function spawnParticle(cx,cy){
+  var el=document.createElement('div');
+  el.className=G.energyPerClick>=1000?'particle big':'particle';
+  el.textContent='+'+fmt(G.energyPerClick);
+  el.style.left=(cx+(Math.random()-.5)*60)+'px';
+  el.style.top=(cy+(Math.random()-.5)*30-20)+'px';
+  D.particles.appendChild(el);
+  el.addEventListener('animationend',function(){el.remove();});
+}
+
+/* ──────────────────────────────────────────────────────────────
+   ACHIEVEMENTS
+   ────────────────────────────────────────────────────────────── */
+function checkAchievements(){
+  var anyNew=false;
+  ACHIEVEMENTS.forEach(function(a){
+    if(a.unlocked)return;
+    if(a.chk()){
+      a.unlocked=true; anyNew=true;
+      var card=D.achGrid.querySelector('[data-id="'+a.id+'"]');
+      if(card)card.classList.add('unlocked');
+      SFX.achiev(); showToast('🏆 '+a.name,'ach');
+    }
+  });
+  if(anyNew) D.achUnlocked.textContent=ACHIEVEMENTS.filter(function(a){return a.unlocked}).length;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   TOAST QUEUE
+   ────────────────────────────────────────────────────────────── */
+var toastQueue=[], toastBusy=false;
+function showToast(msg,type){
+  type=type||''; toastQueue.push({msg:msg,type:type});
+  if(!toastBusy)drainToast();
+}
+function drainToast(){
+  if(!toastQueue.length){toastBusy=false;return;}
+  toastBusy=true; var item=toastQueue.shift();
+  D.toast.textContent=item.msg; D.toast.className='show '+item.type;
+  setTimeout(function(){ D.toast.className=item.type; setTimeout(drainToast,300); },1800);
+}
+
+/* ──────────────────────────────────────────────────────────────
+   PASSIVE INCOME LOOP  (delta-time, frame-accurate)
+   ────────────────────────────────────────────────────────────── */
+var lastTick=performance.now();
+function gameTick(now){
+  // Only tick when game is visible
+  if(D.gameUI.classList.contains('visible')){
+    var delta=Math.min((now-lastTick)/1000,.1);
+    if(G.energyPerSec>0){
+      var earned=G.energyPerSec*delta;
+      G.energy+=earned; G.totalEarned+=earned;
+    }
+  }
+  lastTick=now;
+  requestAnimationFrame(gameTick);
+}
+
+/* UI refresh at 10fps */
+setInterval(function(){
+  if(D.gameUI.classList.contains('visible')){
+    updateUI(); checkAchievements();
+  }
+},100);
+
+/* ──────────────────────────────────────────────────────────────
+   AUTO-SAVE every 60 seconds while playing
+   ────────────────────────────────────────────────────────────── */
+setInterval(function(){
+  if(D.gameUI.classList.contains('visible')) saveGame();
+},60000);
+
+/* ──────────────────────────────────────────────────────────────
+   BOOT
+   ────────────────────────────────────────────────────────────── */
+function init(){
+  initStarfield();
+  refreshSavePreview(); // check for existing save on the menu
+  // Start passive tick loop immediately (it only processes when game is visible)
+  requestAnimationFrame(gameTick);
+  tickRunning=true;
+  console.log('⚡ Energy Clicker — ready.');
+}
+
+init();
+</script>
+</body>
+</html>
